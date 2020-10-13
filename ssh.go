@@ -60,6 +60,9 @@ type KeyboardInteractiveHandler func(ctx Context, challenger gossh.KeyboardInter
 // NextAuthMethodsHandler is a callback for performing 2 step auth
 type NextAuthMethodsHandler func(ctx Context) []string
 
+// GUGUAuthMethodsHandler is a callback for GUGU which is a authclient use by mogujie
+type GUGUAuthMethodsHandler func(ctx Context) AuthResult
+
 // PtyCallback is a hook for allowing PTY sessions.
 type PtyCallback func(ctx Context, pty Pty) bool
 

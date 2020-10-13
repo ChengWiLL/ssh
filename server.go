@@ -28,6 +28,7 @@ type Server struct {
 	PasswordHandler               PasswordHandler               // password authentication handler
 	PublicKeyHandler              PublicKeyHandler              // public key authentication handler
 	NextAuthMethodsHandler        NextAuthMethodsHandler        // next auth methods handler for 2 step auth
+	GUGUAuthMethodsHandler        GUGUAuthMethodsHandler        // GUGU authentication handler
 	PtyCallback                   PtyCallback                   // callback for allowing PTY sessions, allows all if nil
 	ConnCallback                  ConnCallback                  // optional callback for wrapping net.Conn before handling
 	LocalPortForwardingCallback   LocalPortForwardingCallback   // callback for allowing local port forwarding, denies all if nil
@@ -144,6 +145,20 @@ func (srv *Server) config(ctx Context) *gossh.ServerConfig {
 		config.NextAuthMethodsCallback = func(conn gossh.ConnMetadata) []string {
 			applyConnMetadata(ctx, conn)
 			return srv.NextAuthMethodsHandler(ctx)
+		}
+	}
+	if srv.GUGUAuthMethodsHandler != nil {
+		config.GUGUAuthMethodsCallback = func(conn gossh.ConnMetadata) (*gossh.Permissions, error) {
+			applyConnMetadata(ctx, conn)
+			res := srv.GUGUAuthMethodsHandler(ctx)
+			switch res {
+			case AuthSuccessful:
+				return ctx.Permissions().Permissions, nil
+			case AuthPartiallySuccessful:
+				return ctx.Permissions().Permissions, gossh.ErrPartialSuccess
+			default:
+				return ctx.Permissions().Permissions, fmt.Errorf("permission denied")
+			}
 		}
 	}
 	return config
